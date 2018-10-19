@@ -1,0 +1,19 @@
+_export:
+  plugin:
+    repositories:
+      #- file://${repos}
+      - file:///Users/XXXX/Documents/GitHub/digdag-plugin-mssql/build/repo
+      - https://dl.bintray.com/digdag/maven
+      #- https://jitpack.io
+    dependencies:
+      - com.github.kulmam92:digdag-plugin-mssql:0.1.1
+
+  mssql:
+    host: localhost
+    user: sa
+    database: digdag_test
+    ssl: true
+
++step1:
+  mssql>: test.sql
+  download_file: test.txt

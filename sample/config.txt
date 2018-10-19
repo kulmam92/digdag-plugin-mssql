@@ -1,0 +1,2 @@
+# test1234test1234
+digdag.secret-encryption-key = dGVzdDEyMzR0ZXN0MTIzNA==
