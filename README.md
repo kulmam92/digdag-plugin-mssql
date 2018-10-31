@@ -2,8 +2,6 @@
 
 Digdag `mssql>` operator plugin to execute a query on MsSQL server.
 
-**Caution**: This isnot working yet.
-
 ## configuration
 
 [Release list](https://github.com/kulmam92/digdag-plugin-mssql/releases).
@@ -12,10 +10,9 @@ Digdag `mssql>` operator plugin to execute a query on MsSQL server.
 _export:
   plugin:
     repositories:
-    repositories:
-      #- file://${repos}
+      - file://${repos}
       #- file:///path/to/digdag-plugin-mssql/build/repo
-      - https://jitpack.io
+      #- https://jitpack.io
     dependencies:
       - com.github.kulmam92:digdag-plugin-mssql:0.1.1
 
@@ -66,6 +63,6 @@ Artifacts are build on local repos: `./build/repo`.
 ```sh
 digdag selfupdate
 
-rm -rf sample/.digdag/plugin 
+rm -rf .digdag/plugin 
 digdag run -a --project sample plugin.dig -p repos=`pwd`/build/repo
 ```

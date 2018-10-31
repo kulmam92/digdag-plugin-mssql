@@ -2,7 +2,7 @@ _export:
   plugin:
     repositories:
       - file://${repos}
-      - https://dl.bintray.com/digdag/maven
+      #- https://dl.bintray.com/digdag/maven
       #- https://jitpack.io
     dependencies:
       - com.github.kulmam92:digdag-plugin-mssql:0.1.1

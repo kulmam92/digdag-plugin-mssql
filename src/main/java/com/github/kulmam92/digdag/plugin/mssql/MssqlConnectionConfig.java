@@ -24,39 +24,49 @@ import io.digdag.standards.operator.jdbc.AbstractJdbcConnectionConfig;
 public abstract class MssqlConnectionConfig
         extends AbstractJdbcConnectionConfig
 {
-//    public abstract Optional<String> schema();
+    // Not defined in AbstractJdbcConnectionConfig.class
+    // user, database are not optional
+    public abstract Optional<String> instanceName();
+    public abstract Optional<String> schema();
+    public abstract boolean integratedSecurity();
+    public abstract boolean multiSubnetFailover();
+    public abstract Optional<String> applicationIntent();
+    public abstract Optional<String> failoverPartner();
+    // To do options implementations
+    // https://github.com/embulk/embulk-output-jdbc/blob/07b6dfea0c5296c124328d2d17bdc48240f7d159/embulk-output-jdbc/src/main/java/org/embulk/output/jdbc/ToStringMap.java
+    // public abstract Optional<ToStringMap> options();
 
     @VisibleForTesting
     public static MssqlConnectionConfig configure(SecretProvider secrets, Config params)
     {
         return ImmutableMssqlConnectionConfig.builder()
-                .host(secrets.getSecretOptional("host").or(() -> params.get("host", String.class)))
-                .port(secrets.getSecretOptional("port").transform(Integer::parseInt).or(() -> params.get("port", int.class, 1433)))
-                .user(secrets.getSecretOptional("user").or(() -> params.get("user", String.class)))
-                .password(secrets.getSecretOptional("password"))
-                .database(secrets.getSecretOptional("database").or(() -> params.get("database", String.class)))
-                .ssl(secrets.getSecretOptional("ssl").transform(Boolean::parseBoolean).or(() -> params.get("ssl", boolean.class, false)))
-                .connectTimeout(secrets.getSecretOptional("connect_timeout").transform(DurationParam::parse).or(() ->
-                        params.get("connect_timeout", DurationParam.class, DurationParam.of(Duration.ofSeconds(30)))))
-                .socketTimeout(secrets.getSecretOptional("socket_timeout").transform(DurationParam::parse).or(() ->
-                        params.get("socket_timeout", DurationParam.class, DurationParam.of(Duration.ofSeconds(1800)))))
-//                .schema(secrets.getSecretOptional("schema").or(params.getOptional("schema", String.class)))
-//                // Not defined in AbstractJdbcConnectionConfig.class
-//                // Instance name
-//                .instanceName(secrets.getSecretOptional("instanceName").or(params.getOptional("instanceName", String.class)))
-//                // integratedSecurity
-//                .integratedSecurity(secrets.getSecretOptional("integratedSecurity").or(params.getOptional("integratedSecurity", String.class)))
-//                // AG multiSubnetFailover, applicationIntent
-//                .multiSubnetFailover(secrets.getSecretOptional("multiSubnetFailover").transform(Boolean::parseBoolean).or(params.getOptional("multiSubnetFailover", boolean.class)))
-//                .applicationIntent(secrets.getSecretOptional("applicationIntent").or(params.getOptional("applicationIntent", String.class)))
-//                // Mirroring failoverPartner
-//                .failoverPartner(secrets.getSecretOptional("failoverPartner").or(params.getOptional("failoverPartner", String.class)))
-                .build();
+            .host(secrets.getSecretOptional("host").or(() -> params.get("host", String.class)))
+            .port(secrets.getSecretOptional("port").transform(Integer::parseInt).or(() -> params.get("port", int.class, 1433)))
+            .user(secrets.getSecretOptional("user").or(() -> params.get("user", String.class)))
+            .password(secrets.getSecretOptional("password"))
+            .database(secrets.getSecretOptional("database").or(() -> params.get("database", String.class)))
+            .ssl(secrets.getSecretOptional("ssl").transform(Boolean::parseBoolean).or(() -> params.get("ssl", boolean.class, false)))
+            .connectTimeout(secrets.getSecretOptional("connect_timeout").transform(DurationParam::parse).or(() ->
+                params.get("connect_timeout", DurationParam.class, DurationParam.of(Duration.ofSeconds(30)))))
+            .socketTimeout(secrets.getSecretOptional("socket_timeout").transform(DurationParam::parse).or(() ->
+                params.get("socket_timeout", DurationParam.class, DurationParam.of(Duration.ofSeconds(1800)))))
+            .schema(secrets.getSecretOptional("schema").or(params.getOptional("schema", String.class)))
+            .instanceName(secrets.getSecretOptional("instanceName").or(params.getOptional("instanceName", String.class)))
+            .integratedSecurity(secrets.getSecretOptional("integratedSecurity").transform(Boolean::parseBoolean).or(() -> params.get("integratedSecurity", boolean.class, false)))
+            // AG multiSubnetFailover, applicationIntent
+            .multiSubnetFailover(secrets.getSecretOptional("multiSubnetFailover").transform(Boolean::parseBoolean).or(() -> params.get("multiSubnetFailover", boolean.class, false)))
+            .applicationIntent(secrets.getSecretOptional("applicationIntent").or(params.getOptional("applicationIntent", String.class)))
+             // Mirroring failoverPartner
+             .failoverPartner(secrets.getSecretOptional("failoverPartner").or(params.getOptional("failoverPartner", String.class)))              
+            // options
+            //.options(secrets.getSecretOptional("options").or(params.getOptional("options", String.class, "{}")))
+            .build();
     }
 
     @Override
     public String jdbcDriverName()
     {
+        // doesn't support JtdsDriver
         return "com.microsoft.sqlserver.jdbc.SQLServerDriver";
     }
 
@@ -72,7 +82,9 @@ public abstract class MssqlConnectionConfig
         // mssql jdbc properties - https://docs.microsoft.com/en-us/sql/connect/jdbc/setting-the-connection-properties?view=sql-server-2017
         Properties props = new Properties();
   
-        props.setProperty("user", user());
+        if (!integratedSecurity()) {
+                props.setProperty("user", user());
+        }           
         if (password().isPresent()) {
             props.setProperty("password", password().get());
         }
@@ -89,26 +101,19 @@ public abstract class MssqlConnectionConfig
             props.setProperty("trustServerCertificate", "true");
         } else {
             props.setProperty("encrypt", "false");
-        }
-//        Not defined in AbstractJdbcConnectionConfig.class        
-//        if (user().isPresent()) {
-//            props.setProperty("user", user().get());
-//        } 
-//        if (instanceName().isPresent()) {
-//            props.setProperty("instanceName", instanceName().get());
-//        }                        
-//        if (integratedSecurity().isPresent()) {
-//            props.setProperty("integratedSecurity", integratedSecurity().get());
-//        }         
-//        if (multiSubnetFailover().isPresent() && multiSubnetFailover()) {
-//            props.setProperty("multiSubnetFailover", "true");
-//        }         
-//        if (applicationIntent().isPresent()) {
-//            props.setProperty("applicationIntent", applicationIntent().get());
-//        }  
-//        if (failoverPartner().isPresent()) {
-//            props.setProperty("failoverPartner", failoverPartner().get());
-//        }                         
+        }          
+        if (multiSubnetFailover()) {
+                props.setProperty("multiSubnetFailover", "true");
+        }            
+        if (applicationIntent().isPresent()) {
+                props.setProperty("applicationIntent", applicationIntent().get());
+        }  
+        if (failoverPartner().isPresent()) {
+                props.setProperty("failoverPartner", failoverPartner().get());
+        }  
+        // if (options().isPresent()) {
+        //         props.setProperty("options", options().get());
+        // }    
         props.setProperty("applicationName", "digdag");
 
         return props;
@@ -124,14 +129,35 @@ public abstract class MssqlConnectionConfig
     @Override
     public String url()
     {
+        // https://github.com/embulk/embulk-output-jdbc/blob/07b6dfea0c5296c124328d2d17bdc48240f7d159/embulk-output-sqlserver/src/main/java/org/embulk/output/SQLServerOutputPlugin.java
         // jdbc:sqlserver://localhost:1433;databaseName=master;user=sa;password=your_password
-        return String.format(ENGLISH, "jdbc:%s://%s:%d;databaseName=%s", jdbcProtocolName(), host(), port(), database());
+        //return String.format(ENGLISH, "jdbc:%s://%s:%d;databaseName=%s", jdbcProtocolName(), host(), port(), database());
+        StringBuilder urlBuilder = new StringBuilder();
+        if (instanceName().isPresent()) {
+            urlBuilder.append(String.format("jdbc:%s://%s\\%s",
+            jdbcProtocolName(),host(), instanceName().get()));
+        } else {
+            urlBuilder.append(String.format("jdbc:%s://%s:%d",
+            jdbcProtocolName(),host(), port()));
+        }
+        // database is not optional in AbstractJdbcConnectionConfig
+        if (!database().equals("default")) {
+            urlBuilder.append(";databaseName=" + database());
+        }
+        if (integratedSecurity()) {
+            urlBuilder.append(";integratedSecurity=" + "true");
+        } else {
+            // user is not optional in AbstractJdbcConnectionConfig
+            // if (!user().isPresent()) {
+            //     throw new IllegalArgumentException("Field 'user' is not set.");
+            // }
+            if (!password().isPresent()) {
+                throw new IllegalArgumentException("Field 'password' is not set.");
+            }
+        }
+        return String.format(ENGLISH, urlBuilder.toString());
     }
 
-    //
-    // Class.forName("com.mysql.jdbc.Driver") does not work as I expected.
-    // That's why I override this method.
-    //
     @Override
     public Connection openConnection()
     {

@@ -139,6 +139,57 @@ public class MssqlConnection
             );
         }
 
+        @Override
+        public boolean lockedTransaction(UUID queryId, TransactionAction action)
+                throws LockConflictException
+        {
+            boolean completed = beginTransactionAndLockStatusRow(queryId);
+    
+            // status row is locked here until this transaction is committed or aborted.
+    
+            if (completed) {
+                // query was completed successfully before. skip the action.
+                abortTransaction();
+                return false;
+            }
+            else {
+                // query is not completed. run the action.
+                action.run();
+                updateStatusRowAndCommit(queryId);
+                return true;
+            }
+        }
+
+        private boolean beginTransactionAndLockStatusRow(UUID queryId)
+        throws LockConflictException
+        {
+            do {
+                beginTransaction();
+
+                String status = lockStatusRowString(queryId);
+                switch (status) {
+                case "LOCKED_COMPLETED":
+                    return true;
+                case "LOCKED_NOT_COMPLETED":
+                    return false;
+                case "NOT_EXISTS":
+                    // status row doesn't exist. insert one.
+                    insertStatusRowAndCommit(queryId);
+                }
+            } while (true);
+        }
+
+        private void beginTransaction()
+        {
+            executeStatement("begin a transaction", "BEGIN TRANSACTION");
+        }
+    
+        @Override
+        protected void abortTransaction()
+        {
+            executeStatement("rollback a transaction", "ROLLBACK TRANSACTION");
+        }
+
         // Referenced by AbstractPersistentTransactionHelper
         @Override
         protected StatusRow lockStatusRow(UUID queryId)
@@ -166,12 +217,37 @@ public class MssqlConnection
                 }
             }
             catch (SQLException ex) {
-//                if (ex.getSQLState().equals("55P03")) {
-//                    throw new LockConflictException("Failed to acquire a status row lock", ex);
-//                }
-//                else {
                 throw new DatabaseException("Failed to lock a status row", ex);
-//                }
+            }
+        }
+
+        // Did this since enum StatusRow is not public
+        protected String lockStatusRowString(UUID queryId)
+        throws LockConflictException
+        {
+            try (Statement stmt = connection.createStatement()) {
+                // Sql Server doesn't support select for update -- (updlock)
+                ResultSet rs = stmt.executeQuery(String.format(ENGLISH,
+                        "SELECT completed_at FROM %s WHERE query_id = '%s'",
+                        statusTableReference().getName(),
+                        queryId.toString())
+                );
+                if (rs.next()) {
+                    // status row exists and locked. get status of it.
+                    rs.getTimestamp(1);
+                    if (rs.wasNull()) {
+                        return "LOCKED_NOT_COMPLETED";
+                    }
+                    else {
+                        return "LOCKED_COMPLETED";
+                    }
+                }
+                else {
+                    return "NOT_EXISTS";
+                }
+            }
+            catch (SQLException ex) {
+                throw new DatabaseException("Failed to lock a status row", ex);
             }
         }
 
