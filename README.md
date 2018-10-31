@@ -30,7 +30,13 @@ _export:
   download_file: test.txt
 ```
 
-Register mssql password into secrets.
+## Run MSSQL container
+
+```
+docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=mssql_password@1" -p 1433:1433 --name mssql1 -d mcr.microsoft.com/mssql/server:latest-ubuntu
+```
+
+## Register mssql password into secrets.
 
 local mode 
 

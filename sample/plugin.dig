@@ -1,8 +1,7 @@
 _export:
   plugin:
     repositories:
-      #- file://${repos}
-      - file:///Users/XXXX/Documents/GitHub/digdag-plugin-mssql/build/repo
+      - file://${repos}
       - https://dl.bintray.com/digdag/maven
       #- https://jitpack.io
     dependencies:

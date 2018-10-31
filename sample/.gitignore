@@ -1,5 +1,7 @@
 /.digdag-wrapper
-.digdag
+.digdag/
 *.pyc
 
 example.out
+test.txt
+template.txt
