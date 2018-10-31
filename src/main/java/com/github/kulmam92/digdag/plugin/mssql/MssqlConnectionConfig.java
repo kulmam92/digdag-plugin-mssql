@@ -57,7 +57,6 @@ public abstract class MssqlConnectionConfig
     @Override
     public String jdbcDriverName()
     {
-//        return "com.mysql.jdbc.Driver";
         return "com.microsoft.sqlserver.jdbc.SQLServerDriver";
     }
 

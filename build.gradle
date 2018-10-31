@@ -28,11 +28,6 @@ configurations {
 }
 
 dependencies {
-    // compile group: 'io.digdag', name: 'digdag-spi', version: digdagVersion
-    // compile group: 'io.digdag', name: 'digdag-standards', version: digdagVersion
-    // compile group: 'io.digdag', name: 'digdag-plugin-utils', version: digdagVersion
-    // compile group: 'io.digdag', name: 'digdag-client', version: digdagVersion
-    // runtime group: 'io.digdag', name: 'digdag-core', version: digdagVersion
     provided 'io.digdag:digdag-spi:' + digdagVersion
     provided 'io.digdag:digdag-standards:' + digdagVersion
     provided 'io.digdag:digdag-plugin-utils:' + digdagVersion 

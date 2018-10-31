@@ -13,3 +13,7 @@ bin/
 
 # vscode
 .vscode/
+
+# intellij idea
+.idea/
+out/
