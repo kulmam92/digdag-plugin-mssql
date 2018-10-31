@@ -1,0 +1,15 @@
+# digdag
+.digdag/
+
+# gradle
+.gradle/
+build/
+bin/
+
+# eclipse
+.settings/
+.classpath
+.project
+
+# vscode
+.vscode/

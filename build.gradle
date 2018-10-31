@@ -28,20 +28,18 @@ configurations {
 }
 
 dependencies {
-    compile group: 'io.digdag', name: 'digdag-spi', version: digdagVersion
-    compile group: 'io.digdag', name: 'digdag-standards', version: digdagVersion
-    compile group: 'io.digdag', name: 'digdag-plugin-utils', version: digdagVersion
-    compile group: 'io.digdag', name: 'digdag-client', version: digdagVersion
-    runtime group: 'io.digdag', name: 'digdag-core', version: digdagVersion
-    //provided 'io.digdag:digdag-spi:' + digdagVersion
-    //provided 'io.digdag:digdag-standards:' + digdagVersion
-    //provided 'io.digdag:digdag-plugin-utils:' + digdagVersion 
+    // compile group: 'io.digdag', name: 'digdag-spi', version: digdagVersion
+    // compile group: 'io.digdag', name: 'digdag-standards', version: digdagVersion
+    // compile group: 'io.digdag', name: 'digdag-plugin-utils', version: digdagVersion
+    // compile group: 'io.digdag', name: 'digdag-client', version: digdagVersion
+    // runtime group: 'io.digdag', name: 'digdag-core', version: digdagVersion
+    provided 'io.digdag:digdag-spi:' + digdagVersion
+    provided 'io.digdag:digdag-standards:' + digdagVersion
+    provided 'io.digdag:digdag-plugin-utils:' + digdagVersion 
 
     compileOnly "org.immutables:value:2.3.9:annotations"
     apt "org.immutables:value:2.3.9"
 
-    // compile 'mysql:mysql-connector-java:5.1.44'
-    // Added to resolve problems
     compile group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '7.0.0.jre8'
     compile 'com.google.api-client:google-api-client:1.25.0'
 

@@ -1,20 +1,23 @@
 package com.github.kulmam92.digdag.plugin.mssql;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
-import io.digdag.client.config.Config;
-import io.digdag.spi.SecretProvider;
-import io.digdag.standards.operator.jdbc.DatabaseException;
-import io.digdag.util.DurationParam;
-import org.immutables.value.Value;
-
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.Properties;
+import static java.util.Locale.ENGLISH;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
+
+import io.digdag.client.config.Config;
+import io.digdag.spi.SecretProvider;
+import io.digdag.standards.operator.jdbc.DatabaseException;
+import io.digdag.util.DurationParam;
+import org.immutables.value.Value;
+
 import io.digdag.standards.operator.jdbc.AbstractJdbcConnectionConfig;
 
 @Value.Immutable
@@ -28,7 +31,7 @@ public abstract class MssqlConnectionConfig
     {
         return ImmutableMssqlConnectionConfig.builder()
                 .host(secrets.getSecretOptional("host").or(() -> params.get("host", String.class)))
-                .port(secrets.getSecretOptional("port").transform(Integer::parseInt).or(() -> params.get("port", int.class, 3306)))
+                .port(secrets.getSecretOptional("port").transform(Integer::parseInt).or(() -> params.get("port", int.class, 1433)))
                 .user(secrets.getSecretOptional("user").or(() -> params.get("user", String.class)))
                 .password(secrets.getSecretOptional("password"))
                 .database(secrets.getSecretOptional("database").or(() -> params.get("database", String.class)))
@@ -61,7 +64,7 @@ public abstract class MssqlConnectionConfig
     @Override
     public String jdbcProtocolName()
     {
-        return "mssql";
+        return "sqlserver";
     }
 
     @Override
@@ -117,6 +120,13 @@ public abstract class MssqlConnectionConfig
     {
         // Omit credentials in toString output
         return url();
+    }
+
+    @Override
+    public String url()
+    {
+        // jdbc:sqlserver://localhost:1433;databaseName=master;user=sa;password=your_password
+        return String.format(ENGLISH, "jdbc:%s://%s:%d;databaseName=%s", jdbcProtocolName(), host(), port(), database());
     }
 
     //
