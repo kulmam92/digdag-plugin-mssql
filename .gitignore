@@ -4,6 +4,8 @@ build/
 
 # eclipse
 .settings/
-
 .classpath
 .project
+
+# vscode
+.vscode/
