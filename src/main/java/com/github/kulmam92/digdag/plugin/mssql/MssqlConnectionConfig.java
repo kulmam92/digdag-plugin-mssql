@@ -19,6 +19,9 @@ import io.digdag.util.DurationParam;
 import org.immutables.value.Value;
 
 import io.digdag.standards.operator.jdbc.AbstractJdbcConnectionConfig;
+// logging
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Value.Immutable
 public abstract class MssqlConnectionConfig
@@ -32,10 +35,13 @@ public abstract class MssqlConnectionConfig
     public abstract boolean multiSubnetFailover();
     public abstract Optional<String> applicationIntent();
     public abstract Optional<String> failoverPartner();
-    // To do options implementations
+    // To do options implementations - only accept string not map
     // https://github.com/embulk/embulk-output-jdbc/blob/07b6dfea0c5296c124328d2d17bdc48240f7d159/embulk-output-jdbc/src/main/java/org/embulk/output/jdbc/ToStringMap.java
-    // public abstract Optional<ToStringMap> options();
+    public abstract Optional<String> options();
 
+    // logging
+    private static Logger logger = LoggerFactory.getLogger(MssqlConnectionConfig.class);
+    
     @VisibleForTesting
     public static MssqlConnectionConfig configure(SecretProvider secrets, Config params)
     {
@@ -57,9 +63,9 @@ public abstract class MssqlConnectionConfig
             .multiSubnetFailover(secrets.getSecretOptional("multiSubnetFailover").transform(Boolean::parseBoolean).or(() -> params.get("multiSubnetFailover", boolean.class, false)))
             .applicationIntent(secrets.getSecretOptional("applicationIntent").or(params.getOptional("applicationIntent", String.class)))
              // Mirroring failoverPartner
-             .failoverPartner(secrets.getSecretOptional("failoverPartner").or(params.getOptional("failoverPartner", String.class)))              
+            .failoverPartner(secrets.getSecretOptional("failoverPartner").or(params.getOptional("failoverPartner", String.class)))              
             // options
-            //.options(secrets.getSecretOptional("options").or(params.getOptional("options", String.class, "{}")))
+            .options(secrets.getSecretOptional("options").or(params.getOptional("options", String.class)))
             .build();
     }
 
@@ -103,17 +109,22 @@ public abstract class MssqlConnectionConfig
             props.setProperty("encrypt", "false");
         }          
         if (multiSubnetFailover()) {
-                props.setProperty("multiSubnetFailover", "true");
+            props.setProperty("multiSubnetFailover", "true");
         }            
         if (applicationIntent().isPresent()) {
-                props.setProperty("applicationIntent", applicationIntent().get());
+            props.setProperty("applicationIntent", applicationIntent().get());
         }  
         if (failoverPartner().isPresent()) {
-                props.setProperty("failoverPartner", failoverPartner().get());
+            props.setProperty("failoverPartner", failoverPartner().get());
         }  
-        // if (options().isPresent()) {
-        //         props.setProperty("options", options().get());
-        // }    
+        if (options().isPresent()) {
+            String options = options().get();
+            String[] arrOptions = options.split(";");
+            for (int i=0; i < arrOptions.length; i++) {
+                String[] arrOption = arrOptions[i].split("=");
+                props.setProperty(arrOption[0], arrOption[1]);
+            }
+        }
         props.setProperty("applicationName", "digdag");
 
         return props;
@@ -131,19 +142,16 @@ public abstract class MssqlConnectionConfig
     {
         // https://github.com/embulk/embulk-output-jdbc/blob/07b6dfea0c5296c124328d2d17bdc48240f7d159/embulk-output-sqlserver/src/main/java/org/embulk/output/SQLServerOutputPlugin.java
         // jdbc:sqlserver://localhost:1433;databaseName=master;user=sa;password=your_password
-        //return String.format(ENGLISH, "jdbc:%s://%s:%d;databaseName=%s", jdbcProtocolName(), host(), port(), database());
         StringBuilder urlBuilder = new StringBuilder();
         if (instanceName().isPresent()) {
-            urlBuilder.append(String.format("jdbc:%s://%s\\%s",
-            jdbcProtocolName(),host(), instanceName().get()));
+            urlBuilder.append(String.format("jdbc:%s://%s\\%s:%d",
+            jdbcProtocolName(),host(), instanceName().get(), port()));
         } else {
             urlBuilder.append(String.format("jdbc:%s://%s:%d",
             jdbcProtocolName(),host(), port()));
         }
         // database is not optional in AbstractJdbcConnectionConfig
-        if (!database().equals("default")) {
-            urlBuilder.append(";databaseName=" + database());
-        }
+        urlBuilder.append(";databaseName=" + database());
         if (integratedSecurity()) {
             urlBuilder.append(";integratedSecurity=" + "true");
         } else {
@@ -155,7 +163,9 @@ public abstract class MssqlConnectionConfig
                 throw new IllegalArgumentException("Field 'password' is not set.");
             }
         }
-        return String.format(ENGLISH, urlBuilder.toString());
+        String jdbcUrl = urlBuilder.toString();
+        //logger.info("url: {}", jdbcUrl);
+        return String.format(ENGLISH, jdbcUrl);
     }
 
     @Override

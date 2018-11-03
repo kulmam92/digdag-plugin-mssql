@@ -36,6 +36,56 @@ public class MssqlConnection
     }
 
     @Override
+    public String buildCreateTableStatement(String selectSql, TableReference targetTable)
+    {
+        String escapedRef = escapeTableReference(targetTable);
+        return String.format(ENGLISH,
+                "IF EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '%s') \n" +
+                "BEGIN \n" +
+                "DROP TABLE %s; \n" +
+                "END \n" +
+                "SELECT * INTO %s \n" +
+                "FROM ( \n" +
+                "%s \n" +
+                ") t ",
+                escapedRef, escapedRef, selectSql);                
+    }
+
+    @Override
+    public String buildInsertStatement(String selectSql, TableReference targetTable)
+    {
+        String escapedRef = escapeTableReference(targetTable);
+        return String.format(ENGLISH,
+                "INSERT INTO %s\n%s",
+                escapedRef, selectSql);
+    }
+
+    // To do - make it compatable with MS    
+    @Override
+    public SQLException validateStatement(String sql)
+    {
+        // Here uses nativeSQL() instead of Connection#prepareStatement because
+        // prepareStatement() validates a SQL by creating a server-side prepared statement
+        // and RDBMS wrongly decides that the SQL is broken in this case:
+        //   * the SQL includes multiple statements
+        //   * a statement creates a table and a later statement uses it in the SQL
+        try {
+            connection.nativeSQL(sql);
+            return null;
+        }
+        catch (SQLException ex) {
+            if (ex.getSQLState().startsWith("42")) { // to do
+                // SQL error class 42
+                return ex;
+            }
+            throw new DatabaseException("Failed to validate statement", ex);
+        }
+    }
+
+    // To do - implement sqlcmd support
+    // https://github.com/embulk/embulk-output-jdbc/blob/07b6dfea0c5296c124328d2d17bdc48240f7d159/embulk-output-sqlserver/src/test/java/org/embulk/output/sqlserver/SQLServerTests.java
+
+    @Override
     public void executeReadOnlyQuery(String sql, Consumer<JdbcResultSet> resultHandler)
             throws NotReadOnlyException
     {
@@ -102,10 +152,10 @@ public class MssqlConnection
         String buildCreateTable()
         {
             return String.format(ENGLISH,
-                    "IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '%s') " +
-                    "BEGIN " +
-                    "CREATE TABLE %s " +
-                    "(query_id varchar(50) NOT NULL UNIQUE, created_at datetime2 NOT NULL, completed_at datetime2) " +
+                    "IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '%s')  \n" +
+                    "BEGIN  \n" +
+                    "CREATE TABLE %s  \n" +
+                    "(query_id varchar(50) NOT NULL UNIQUE, created_at datetime2 NOT NULL, completed_at datetime2)  \n" +
                     "END",
                     statusTableReference.getName(),
                     statusTableReference.getName());

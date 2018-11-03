@@ -1,6 +1,11 @@
 # digdag-plugin-mssql
 
 Digdag `mssql>` operator plugin to execute a query on MsSQL server.
+Created by converting https://github.com/hiroyuki-sato/digdag-plugin-mysql to mssql version.
+
+**Warning**
+* Doesn't support windows authentication yet.
+* You can't use GO in the sql file. If you need to use that, you may call SQLCMD using sh operator.
 
 ## configuration
 
@@ -19,7 +24,7 @@ _export:
   mssql:
     host: localhost
     user: sa
-    database: digdag_test
+    database: tempdb
     ssl: true
 
 +step1:

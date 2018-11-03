@@ -2,6 +2,7 @@ _export:
   plugin:
     repositories:
       - file://${repos}
+      #- file:///vmware-host/Shared Folders/Documents/GitHub/digdag-plugin-mssql/build/repo/
       #- https://dl.bintray.com/digdag/maven
       #- https://jitpack.io
     dependencies:
@@ -14,5 +15,8 @@ _export:
     ssl: true
 
 +step1:
-  mssql>: test.sql
-  download_file: test.txt
+  mssql>: test1.sql
+
++step2:
+  mssql>: test2.sql
+  download_file: test.txt  

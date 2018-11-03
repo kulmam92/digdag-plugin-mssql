@@ -24,6 +24,8 @@ public class MssqlOperatorFactoryTest
     public void setUp()
     {
         operatorFactory = testHelper.injector().getInstance(MssqlOperatorFactory.class);
+        System.out.println("GetKEY");
+        System.out.println(operatorFactory.getType());
     }
 
     @Test
