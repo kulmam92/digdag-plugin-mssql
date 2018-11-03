@@ -11,8 +11,7 @@ _export:
   mssql:
     host: localhost
     user: sa
-    database: digdag_test
-    ssl: true
+    database: tempdb
 
 +step1:
   mssql>: test1.sql

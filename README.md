@@ -25,11 +25,13 @@ _export:
     host: localhost
     user: sa
     database: tempdb
-    ssl: true
 
 +step1:
-  mssql>: test.sql
-  download_file: test.txt
+  mssql>: test1.sql
+
++step2:
+  mssql>: test2.sql
+  download_file: test.txt  
 ```
 
 ## Run MSSQL container
