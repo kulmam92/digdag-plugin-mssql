@@ -4,8 +4,8 @@ Digdag `mssql>` operator plugin to execute a query on MsSQL server.
 Created by converting https://github.com/hiroyuki-sato/digdag-plugin-mysql to mssql version.
 
 **Warning**
-* Doesn't support windows authentication yet.
-* You can't use GO in the sql file. If you need to use that, you may call SQLCMD using sh operator.
+* You can't use GO in the sql file. If you need to use that or run complex query, you may call SQLCMD using sh operator like below example.
+* sh>: sqlcmd -i test1.sql -f 65001 -S "${host},${port}" -e -b
 
 ## configuration
 
