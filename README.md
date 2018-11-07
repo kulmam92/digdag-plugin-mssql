@@ -1,7 +1,7 @@
 # digdag-plugin-mssql
 
 Digdag `mssql>` operator plugin to execute a query on MsSQL server.
-Created by converting https://github.com/hiroyuki-sato/digdag-plugin-mysql to mssql version.
+<br>Created by converting https://github.com/hiroyuki-sato/digdag-plugin-mysql to mssql version.
 
 **Warning**
 * You can't use GO in the sql file. If you need to use that or run complex query, you may call SQLCMD using sh operator like below example.

@@ -95,7 +95,6 @@ public abstract class MssqlConnectionConfig
             if (password().isPresent()) {
                 props.setProperty("password", password().get());
             }
-            //props.setProperty("integratedSecurity", "true");
         }
 
         // convert 0000-00-00 to NULL to avoid this exceptoin:
