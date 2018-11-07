@@ -19,7 +19,7 @@ _export:
       #- file:///path/to/digdag-plugin-mssql/build/repo
       #- https://jitpack.io
     dependencies:
-      - com.github.kulmam92:digdag-plugin-mssql:0.1.2
+      - com.github.kulmam92:digdag-plugin-mssql:0.1.3-SNAPSHOT
 
   mssql:
     host: localhost
