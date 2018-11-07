@@ -48,7 +48,7 @@ public abstract class MssqlConnectionConfig
         return ImmutableMssqlConnectionConfig.builder()
             .host(secrets.getSecretOptional("host").or(() -> params.get("host", String.class)))
             .port(secrets.getSecretOptional("port").transform(Integer::parseInt).or(() -> params.get("port", int.class, 1433)))
-            .user(secrets.getSecretOptional("user").or(() -> params.get("user", String.class)))
+            .user(secrets.getSecretOptional("user").or(() -> params.get("user", String.class, "N/A")))
             .password(secrets.getSecretOptional("password"))
             .database(secrets.getSecretOptional("database").or(() -> params.get("database", String.class)))
             .ssl(secrets.getSecretOptional("ssl").transform(Boolean::parseBoolean).or(() -> params.get("ssl", boolean.class, false)))
@@ -87,12 +87,15 @@ public abstract class MssqlConnectionConfig
     {
         // mssql jdbc properties - https://docs.microsoft.com/en-us/sql/connect/jdbc/setting-the-connection-properties?view=sql-server-2017
         Properties props = new Properties();
-  
-        if (!integratedSecurity()) {
-                props.setProperty("user", user());
-        }           
-        if (password().isPresent()) {
-            props.setProperty("password", password().get());
+
+        if (integratedSecurity()) {
+            props.setProperty("integratedSecurity", "true");
+        } else {
+            props.setProperty("user", user());
+            if (password().isPresent()) {
+                props.setProperty("password", password().get());
+            }
+            //props.setProperty("integratedSecurity", "true");
         }
 
         // convert 0000-00-00 to NULL to avoid this exceptoin:
@@ -142,30 +145,13 @@ public abstract class MssqlConnectionConfig
     {
         // https://github.com/embulk/embulk-output-jdbc/blob/07b6dfea0c5296c124328d2d17bdc48240f7d159/embulk-output-sqlserver/src/main/java/org/embulk/output/SQLServerOutputPlugin.java
         // jdbc:sqlserver://localhost:1433;databaseName=master;user=sa;password=your_password
-        StringBuilder urlBuilder = new StringBuilder();
+        String fullHostname;
         if (instanceName().isPresent()) {
-            urlBuilder.append(String.format("jdbc:%s://%s\\%s:%d",
-            jdbcProtocolName(),host(), instanceName().get(), port()));
+            fullHostname = host()+"//"+instanceName();
         } else {
-            urlBuilder.append(String.format("jdbc:%s://%s:%d",
-            jdbcProtocolName(),host(), port()));
-        }
-        // database is not optional in AbstractJdbcConnectionConfig
-        urlBuilder.append(";databaseName=" + database());
-        if (integratedSecurity()) {
-            urlBuilder.append(";integratedSecurity=" + "true");
-        } else {
-            // user is not optional in AbstractJdbcConnectionConfig
-            // if (!user().isPresent()) {
-            //     throw new IllegalArgumentException("Field 'user' is not set.");
-            // }
-            if (!password().isPresent()) {
-                throw new IllegalArgumentException("Field 'password' is not set.");
-            }
-        }
-        String jdbcUrl = urlBuilder.toString();
-        //logger.info("url: {}", jdbcUrl);
-        return String.format(ENGLISH, jdbcUrl);
+            fullHostname = host();
+        }            
+        return String.format(ENGLISH, "jdbc:%s://%s:%d;databaseName=%s", jdbcProtocolName(), fullHostname, port(), database());
     }
 
     @Override
