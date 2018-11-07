@@ -1,5 +1,5 @@
 plugins {
-    id 'net.ltgt.apt' version '0.9'
+    id 'net.ltgt.apt' version '0.19'
 }
 
 apply plugin: 'java'
@@ -11,7 +11,7 @@ apply plugin: 'idea'
 apply plugin: 'net.ltgt.apt'
 
 group = 'com.github.kulmam92'
-version = '0.1.1'
+version = '0.1.2-SNAPSHOT'
 
 def digdagVersion = '0.9.31'
 
@@ -33,7 +33,7 @@ dependencies {
     provided 'io.digdag:digdag-plugin-utils:' + digdagVersion 
 
     compileOnly "org.immutables:value:2.3.9:annotations"
-    apt "org.immutables:value:2.3.9"
+    annotationProcessor "org.immutables:value:2.3.9"
 
     compile group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '7.0.0.jre8'
     compile 'com.google.api-client:google-api-client:1.25.0'
@@ -41,7 +41,7 @@ dependencies {
     testCompile  "io.digdag:digdag-tests:" + digdagVersion
 
     testCompileOnly "org.immutables:value:2.3.9:annotations"
-    testApt "org.immutables:value:2.3.9"
+    testAnnotationProcessor "org.immutables:value:2.3.9"
 
     testCompile 'junit:junit:4.12'
     testCompile 'org.hamcrest:hamcrest-library:1.3'

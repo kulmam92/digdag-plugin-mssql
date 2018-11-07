@@ -174,6 +174,7 @@ public class MssqlOperatorFactory
 
             try (MssqlConnection connection = connect(connectionConfig)) {
                 Exception statementError = connection.validateStatement(query);
+
                 if (statementError != null) {
                     throw new ConfigException("Given query is invalid", statementError);
                 }
